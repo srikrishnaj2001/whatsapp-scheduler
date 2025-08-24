@@ -9,6 +9,9 @@ const awsScheduler = require('../utils/awsScheduler');
 const crypto = require('crypto');
 const awsEventBridgeRules = require('../utils/awsEventBridgeRules');
 
+// Force in-memory scheduler when set (USE_IN_MEMORY_SCHEDULER=true or SCHEDULER_MODE=memory)
+const FORCE_MEMORY_SCHEDULER = (process.env.USE_IN_MEMORY_SCHEDULER === 'true' || process.env.SCHEDULER_MODE === 'memory');
+
 const upload = multer({
   dest: 'uploads/',
   limits: {
@@ -107,7 +110,7 @@ router.post('/schedule', async (req, res) => {
     const callbackPayload = { groupIds, message, scheduled: true };
     const isoUtc = runAt.toISOString();
 
-    if (process.env.AWS_API_DESTINATION_ARN && process.env.AWS_SCHEDULER_ROLE_ARN) {
+    if (!FORCE_MEMORY_SCHEDULER && process.env.AWS_API_DESTINATION_ARN && process.env.AWS_SCHEDULER_ROLE_ARN) {
       try {
         // Preferred: Scheduler one-time schedule
         await awsScheduler.createOneTimeSchedule({
@@ -133,7 +136,7 @@ router.post('/schedule', async (req, res) => {
       }
     } else {
       const job = scheduler.scheduleBroadcast({ groupIds, message, runAtMs: runAt.getTime() });
-      return res.status(200).json({ status: 'success', message: 'Scheduled (in-memory fallback)', data: job });
+      return res.status(200).json({ status: 'success', message: 'Scheduled (in-memory)', data: job });
     }
   } catch (error) {
     console.error('Schedule error:', error);

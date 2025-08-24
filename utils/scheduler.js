@@ -10,14 +10,17 @@ const scheduleBroadcast = (params) => {
   const delay = Math.max(0, runAtMs - now);
   const id = String(nextId++);
 
+  console.log(`[scheduler] Scheduled job ${id} at ${new Date(runAtMs).toISOString()} for ${groupIds.length} group(s)`);
+
   const timeout = setTimeout(async () => {
+    console.log(`[scheduler] Executing job ${id} at ${new Date().toISOString()}`);
     try {
       // Check for connected session before sending
       const sessionsResponse = await wasenderApi.getAllSessions();
       const sessions = (sessionsResponse && sessionsResponse.data) || [];
       const connectedSession = sessions.find(session => session.status === 'connected');
       if (!connectedSession) {
-        // Best-effort: skip if no active session at execution time
+        console.warn('[scheduler] No active WhatsApp session at execution time; skipping job', id);
         scheduledJobs.delete(id);
         return;
       }
@@ -25,15 +28,17 @@ const scheduleBroadcast = (params) => {
       for (const groupId of groupIds) {
         try {
           await wasenderApi.sendMessage({ to: groupId, text: message });
+          console.log(`[scheduler] Sent to ${groupId}`);
           await new Promise(resolve => setTimeout(resolve, 800));
         } catch (err) {
-          // continue with other groups
+          console.warn(`[scheduler] Failed to send to ${groupId}: ${err?.message || err}`);
         }
       }
     } catch (err) {
-      // swallow; job done regardless
+      console.error('[scheduler] Unexpected error executing job', id, err);
     } finally {
       scheduledJobs.delete(id);
+      console.log(`[scheduler] Job ${id} completed`);
     }
   }, delay);
 
