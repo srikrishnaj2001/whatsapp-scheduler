@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Group Manager - Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Tailwind Config -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'wa-green': '#25D366',
+                        'wa-dark': '#075E54',
+                        'wa-light': '#128C7E',
+                        'glass': 'rgba(255, 255, 255, 0.05)',
+                        'glass-border': 'rgba(255, 255, 255, 0.1)',
+                        'card': '#0b0b0b',
+                        'border': 'rgba(255,255,255,0.08)',
+                        'muted': 'rgba(255,255,255,0.6)',
+                        'wa': '#25D366'
+                    },
+                    animation: {
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'gradient': 'gradient 15s ease infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%': { boxShadow: '0 0 20px rgba(37, 211, 102, 0.5)' },
+                            '100%': { boxShadow: '0 0 30px rgba(37, 211, 102, 0.8)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        },
+                        gradient: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' }
+                        }
+                    },
+                    backdropBlur: {
+                        'xs': '2px',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .glass-morphism-strong {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); }
+        .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+        
+        .gradient-bg {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #c471f5);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .bento-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(37, 211, 102, 0.3),
+                        0 0 40px rgba(37, 211, 102, 0.2),
+                        0 0 60px rgba(37, 211, 102, 0.1);
+        }
+        
+        .neon-border {
+            position: relative;
+            border: 2px solid transparent;
+            background: linear-gradient(#0a0a0a, #0a0a0a) padding-box,
+                        linear-gradient(135deg, #667eea, #25D366) border-box;
+        }
+        
+        .floating-gradient {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(37, 211, 102, 0.2) 0%, transparent 70%);
+            filter: blur(40px);
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        
+        .shimmer {
+            animation: shimmer 2s infinite;
+            background: linear-gradient(to right, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+            background-size: 1000px 100%;
+        }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen overflow-x-hidden">
+    <!-- Plain black background (no gradients) -->
+    
+    <!-- Main Content -->
+    <div>
+        <div class="py-10 px-4" x-data="dashboardApp()" x-init="init()">
+            <!-- Header -->
+            <header class="flex justify-end items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="glass rounded-full px-3 py-1 text-sm text-muted">
+                        <span class="w-2 h-2 rounded-full bg-green-500 inline-block mr-2 align-middle"></span>
+                        <span class="align-middle"><%= user.phoneNumber || user.jid || 'Connected' %></span>
+                    </div>
+                    <button @click="logout" class="glass rounded-full px-3 py-2 hover:bg-red-500/20 transition" title="Logout">
+                        <i class="fas fa-sign-out-alt text-gray-300"></i>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- Main Dashboard -->
+            <div class="max-w-7xl mx-auto pb-10">
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Group Selection Panel -->
+                    <div class="card rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-semibold">Select Groups</h2>
+                            <button 
+                                @click="loadGroups"
+                                :disabled="loadingGroups"
+                                class="px-4 py-2 bg-wa-green hover:bg-wa-dark text-white rounded-lg transition-all duration-300 disabled:opacity-50"
+                            >
+                                <span x-show="!loadingGroups">
+                                    <i class="fas fa-sync-alt mr-2"></i>Refresh Groups
+                                </span>
+                                <span x-show="loadingGroups">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Loading...
+                                </span>
+                            </button>
+                        </div>
+                        
+                        <!-- Multi-select dropdown -->
+                        <div class="relative">
+                            <div @click="dropdownOpen = !dropdownOpen" class="h-12 px-4 flex items-center justify-between rounded-lg border border-border bg-black/20 cursor-pointer">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <template x-if="selectedGroups.length === 0">
+                                        <span class="text-muted">Search and select groups...</span>
+                                    </template>
+                                    <template x-if="selectedGroups.length > 0">
+                                        <span class="px-2 py-1 rounded-full bg-white/10 text-sm" x-text="selectedGroups.length + ' selected'"></span>
+                                    </template>
+                                </div>
+                                <i class="fa fa-chevron-down text-muted"></i>
+                            </div>
+                            
+                            <div x-show="dropdownOpen" @click.outside="dropdownOpen=false" x-transition class="absolute z-20 mt-2 w-full rounded-lg glass p-3 backdrop-blur">
+                                <div class="relative mb-3">
+                                    <i class="fas fa-search text-muted absolute left-3 top-1/2 -translate-y-1/2"></i>
+                                    <input 
+                                        x-model="groupSearch"
+                                        placeholder="Search groups..."
+                                        class="w-full pl-8 pr-3 py-2 bg-transparent border border-border rounded-md focus:ring-1 focus:ring-white/20 outline-none placeholder:text-muted text-sm" />
+                                </div>
+                                <div class="max-h-64 overflow-y-auto">
+                                    <template x-for="group in filteredGroups" :key="group.id">
+                                        <button type="button" class="w-full text-left px-2 py-2 rounded-md hover:bg-white/10 flex items-center gap-3" @click="toggleGroup(group)">
+                                            <input 
+                                                type="checkbox"
+                                                :checked="selectedGroups.some(g => g.id === group.id)"
+                                                class="w-4 h-4 text-wa-green bg-black/50 border-gray-600 rounded focus:ring-wa-green focus:ring-2"
+                                            />
+                                            <div class="flex-1">
+                                                <p class="text-white font-medium" x-text="group.name"></p>
+                                                <p class="text-xs text-muted truncate" x-text="group.description || 'No description'"></p>
+                                            </div>
+                                        </button>
+                                    </template>
+                                    <div x-show="filteredGroups.length === 0" class="text-center text-muted py-6">No groups found</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div x-show="selectedGroups.length > 0" class="mt-4 pt-4 border-t border-border">
+                            <p class="text-sm text-muted mb-2">Selected:</p>
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="group in selectedGroups" :key="group.id">
+                                    <span class="px-3 py-1 rounded-full bg-white/10 text-sm flex items-center gap-2">
+                                        <span x-text="group.name"></span>
+                                        <button @click.stop="toggleGroup(group)" class="hover:text-red-400" title="Remove">
+                                            <i class="fas fa-times text-xs"></i>
+                                        </button>
+                                    </span>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Message Composer -->
+                    <div class="card rounded-2xl p-6">
+                        <h2 class="text-xl font-semibold mb-6">Compose Message</h2>
+                        
+                        <!-- Rich Text Editor -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium text-gray-300 mb-2">Message</label>
+                            <div class="glass border border-border rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-white/20">
+                                <!-- Editor Toolbar -->
+                                <div class="flex items-center justify-between p-2 border-b border-border bg-black/20">
+                                    <div class="flex items-center space-x-2">
+                                        <button @click="formatText('bold')" class="p-2 hover:bg-white/10 rounded transition-colors" title="Bold">
+                                            <i class="fas fa-bold"></i>
+                                        </button>
+                                        <button @click="formatText('italic')" class="p-2 hover:bg-white/10 rounded transition-colors" title="Italic">
+                                            <i class="fas fa-italic"></i>
+                                        </button>
+                                        <button @click="formatText('underline')" class="p-2 hover:bg-white/10 rounded transition-colors" title="Underline">
+                                            <i class="fas fa-underline"></i>
+                                        </button>
+                                        <div class="w-px h-6 bg-gray-600"></div>
+                                        <button @click="insertEmoji('😊')" class="p-2 hover:bg-white/10 rounded transition-colors">😊</button>
+                                        <button @click="insertEmoji('🎉')" class="p-2 hover:bg-white/10 rounded transition-colors">🎉</button>
+                                        <button @click="insertEmoji('👍')" class="p-2 hover:bg-white/10 rounded transition-colors">👍</button>
+                                    </div>
+                                    <div class="text-xs text-gray-500" x-text="message.length + '/4096'"></div>
+                                </div>
+                                
+                                <!-- Editor Content -->
+                                <textarea 
+                                    x-model="message"
+                                    x-ref="messageEditor"
+                                    placeholder="Type your message here... Use line breaks and formatting as needed."
+                                    rows="8"
+                                    maxlength="4096"
+                                    class="w-full p-4 bg-transparent border-0 focus:outline-none resize-none placeholder-gray-500"
+                                ></textarea>
+                            </div>
+                        </div>
+                        
+                        <!-- Send & Schedule Controls -->
+                        <div class="mt-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-end mb-4">
+                                <div class="flex items-center gap-3 text-sm text-muted">
+                                    <span>Send now</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" x-model="scheduleMode" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:bg-white/20 transition"></div>
+                                        <div class="absolute left-1 top-1 w-4 h-4 bg-white/70 rounded-full transition peer-checked:translate-x-5"></div>
+                                    </label>
+                                    <span>Schedule</span>
+                                </div>
+                                
+                                <template x-if="!scheduleMode">
+                                    <div class="flex justify-end">
+                                        <button 
+                                            @click="sendMessage"
+                                            :disabled="!canSendMessage"
+                                            class="px-6 py-3 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl border border-border transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <span x-show="!sendingMessage">
+                                                <i class="fas fa-paper-plane mr-2"></i>Send Message
+                                            </span>
+                                            <span x-show="sendingMessage" class="flex items-center">
+                                                <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                                </svg>
+                                                Sending...
+                                            </span>
+                                        </button>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <div x-show="scheduleMode" x-transition class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                                <div class="self-end">
+                                    <label class="block text-sm text-muted mb-2">Select Date</label>
+                                    <input type="date" x-model="scheduleDate" :min="todayYmd" class="w-full h-12 bg-transparent border border-border rounded-lg px-3 focus:ring-2 focus:ring-white/20 outline-none" />
+                                </div>
+                                <div class="self-end">
+                                    <label class="block text-sm text-muted mb-2">Select Time (IST)</label>
+                                    <input type="time" x-model="scheduleTime" class="w-full h-12 bg-transparent border border-border rounded-lg px-3 focus:ring-2 focus:ring-white/20 outline-none" />
+                                </div>
+                                <div class="flex justify-end self-end">
+                                    <button 
+                                        @click="scheduleBroadcast"
+                                        :disabled="!canSchedule"
+                                        class="h-12 px-6 bg-white/10 hover:bg-white/15 text-white font-semibold rounded-xl border border-border transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <i class="fas fa-calendar-check mr-2"></i>Schedule
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-2 text-sm text-gray-400">
+                                <span x-show="selectedGroups.length === 0">Select groups to send message</span>
+                                <span x-show="selectedGroups.length > 0" x-text="scheduleMode ? ('Schedule to ' + selectedGroups.length + ' group(s)') : ('Send to ' + selectedGroups.length + ' group(s)')"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div x-show="recentActivity.length > 0" class="mt-8 card rounded-2xl p-6">
+                    <h2 class="text-xl font-semibold mb-4">Recent Activity</h2>
+                    <div class="space-y-3">
+                        <template x-for="activity in recentActivity" :key="activity.id">
+                            <div class="flex items-center justify-between p-3 bg-black/30 rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-2 h-2 rounded-full" :class="activity.status === 'success' ? 'bg-green-500' : 'bg-red-500'"></div>
+                                    <span x-text="activity.message"></span>
+                                </div>
+                                <span class="text-xs text-gray-500" x-text="activity.time"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+<script>
+function dashboardApp() {
+    return {
+        groups: [],
+        selectedGroups: [],
+        message: '',
+        groupSearch: '',
+        loadingGroups: false,
+        sendingMessage: false,
+        messagesSent: 0,
+        recentActivity: [],
+        dropdownOpen: false,
+        scheduleMode: false,
+        scheduleDate: '',
+        scheduleTime: '',
+        todayYmd: '',
+
+        init() {
+            this.loadGroups();
+            const now = new Date();
+            const pad = (n) => String(n).padStart(2, '0');
+            const y = now.getFullYear();
+            const m = pad(now.getMonth() + 1);
+            const d = pad(now.getDate());
+            this.todayYmd = `${y}-${m}-${d}`;
+            if (!this.scheduleDate) this.scheduleDate = this.todayYmd;
+            // Round to next 5 minutes
+            const rounded = new Date(now);
+            rounded.setSeconds(0, 0);
+            const add = 5 - (rounded.getMinutes() % 5 || 5);
+            rounded.setMinutes(rounded.getMinutes() + add);
+            const hh = pad(rounded.getHours());
+            const mm = pad(rounded.getMinutes());
+            if (!this.scheduleTime) this.scheduleTime = `${hh}:${mm}`;
+            this.$watch('scheduleMode', (val) => {
+                if (val && (!this.scheduleDate || !this.scheduleTime)) {
+                    this.scheduleDate = this.todayYmd;
+                    this.scheduleTime = `${hh}:${mm}`;
+                }
+            });
+        },
+        
+        get filteredGroups() {
+            if (!this.groupSearch) return this.groups;
+            return this.groups.filter(group => 
+                group.name.toLowerCase().includes(this.groupSearch.toLowerCase()) ||
+                (group.description || '').toLowerCase().includes(this.groupSearch.toLowerCase())
+            );
+        },
+        
+        get canSendMessage() {
+            return this.selectedGroups.length > 0 && this.message.trim() && !this.sendingMessage;
+        },
+
+        get canSchedule() {
+            return this.selectedGroups.length > 0 && this.scheduleDate && this.scheduleTime;
+        },
+        
+        async loadGroups() {
+            this.loadingGroups = true;
+            try {
+                const response = await fetch('/api/groups/admin');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    this.groups = data.data.groups;
+                } else {
+                    this.addActivity('Failed to load groups', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading groups:', error);
+                this.addActivity('Error loading groups', 'error');
+            } finally {
+                this.loadingGroups = false;
+            }
+        },
+        
+        toggleGroup(group) {
+            const index = this.selectedGroups.findIndex(g => g.id === group.id);
+            if (index > -1) {
+                this.selectedGroups.splice(index, 1);
+            } else {
+                this.selectedGroups.push(group);
+            }
+        },
+        
+        async sendMessage() {
+            if (!this.canSendMessage) return;
+            
+            this.sendingMessage = true;
+            try {
+                const groupIds = this.selectedGroups.map(g => g.id);
+                
+                const response = await fetch('/api/messages/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupIds: groupIds,
+                        message: this.message
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    this.messagesSent += data.data.successful;
+                    this.addActivity(`Message sent to ${data.data.successful} groups`, 'success');
+                    this.message = '';
+                    this.selectedGroups = [];
+                } else {
+                    this.addActivity('Failed to send message', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                this.addActivity('Error sending message', 'error');
+            } finally {
+                this.sendingMessage = false;
+            }
+        },
+
+        async scheduleBroadcast() {
+            if (!this.canSchedule) return;
+
+            this.sendingMessage = true; // Use sendingMessage for both send and schedule
+            try {
+                const groupIds = this.selectedGroups.map(g => g.id);
+
+                // Build UTC ISO from IST (UTC+05:30)
+                const [y, m, d] = this.scheduleDate.split('-').map(Number);
+                const [hh, mm] = this.scheduleTime.split(':').map(Number);
+                const utcMs = Date.UTC(y, m - 1, d, hh - 5, mm - 30, 0);
+                if (utcMs < Date.now() + 60000) { // require at least 1 minute lead time
+                    this.addActivity('Please choose a time at least 1 minute in the future', 'error');
+                    this.sendingMessage = false;
+                    return;
+                }
+                const isoUtc = new Date(utcMs).toISOString();
+
+                const response = await fetch('/api/messages/schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        groupIds: groupIds,
+                        message: this.message,
+                        scheduledAt: isoUtc
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const humanIST = new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata' }).format(new Date(isoUtc));
+                    this.addActivity(`Message scheduled for ${humanIST} IST to ${groupIds.length} groups`, 'success');
+                    this.message = '';
+                    this.selectedGroups = [];
+                    this.scheduleMode = false;
+                    this.scheduleDate = '';
+                    this.scheduleTime = '';
+                } else {
+                    this.addActivity('Failed to schedule message', 'error');
+                }
+            } catch (error) {
+                console.error('Error scheduling message:', error);
+                this.addActivity('Error scheduling message', 'error');
+            } finally {
+                this.sendingMessage = false;
+            }
+        },
+        
+        formatText(command) {
+            const textarea = this.$refs.messageEditor;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const selectedText = textarea.value.substring(start, end);
+            
+            if (selectedText) {
+                let formattedText;
+                switch(command) {
+                    case 'bold':
+                        formattedText = `*${selectedText}*`;
+                        break;
+                    case 'italic':
+                        formattedText = `_${selectedText}_`;
+                        break;
+                    case 'underline':
+                        formattedText = `~${selectedText}~`;
+                        break;
+                    default:
+                        formattedText = selectedText;
+                }
+                
+                this.message = this.message.substring(0, start) + formattedText + this.message.substring(end);
+                
+                setTimeout(() => {
+                    textarea.focus();
+                    textarea.setSelectionRange(start, start + formattedText.length);
+                }, 0);
+            }
+        },
+        
+        insertEmoji(emoji) {
+            const textarea = this.$refs.messageEditor;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            
+            this.message = this.message.substring(0, start) + emoji + this.message.substring(end);
+            
+            setTimeout(() => {
+                textarea.focus();
+                textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+            }, 0);
+        },
+        
+        addActivity(message, status) {
+            this.recentActivity.unshift({
+                id: Date.now(),
+                message: message,
+                status: status,
+                time: new Date().toLocaleTimeString()
+            });
+            
+            if (this.recentActivity.length > 5) {
+                this.recentActivity.pop();
+            }
+        },
+        
+        async logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    await fetch('/api/session/logout', { method: 'POST' });
+                    window.location.href = '/';
+                } catch (error) {
+                    console.error('Error logging out:', error);
+                    window.location.href = '/';
+                }
+            }
+        }
+    }
+}
+</script>
+</body>
+</html>

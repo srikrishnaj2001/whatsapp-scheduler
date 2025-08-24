@@ -1,0 +1,36 @@
+{
+  "name": "whatsapp-group-service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "kill:port": "sudo kill -9 $(sudo lsof -t -i:8009)",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-eventbridge": "^3.873.0",
+    "@aws-sdk/client-scheduler": "^3.864.0",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "fs-extra": "^11.3.1",
+    "helmet": "^8.1.0",
+    "morgan": "^1.10.1",
+    "multer": "^2.0.2",
+    "puppeteer": "^24.17.0",
+    "qr-image": "^3.2.0",
+    "qrcode": "^1.5.4",
+    "whatsapp-web.js": "^1.32.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

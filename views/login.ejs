@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect WhatsApp</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Countries dataset -->
+
+    
+    <!-- Tailwind tokens approximating shadcn look -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 'inter': ['Inter', 'sans-serif'] },
+                    colors: {
+                        'card': '#0b0b0b',
+                        'border': 'rgba(255,255,255,0.08)',
+                        'muted': 'rgba(255,255,255,0.6)',
+                        'wa': '#25D366'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); }
+        .glass { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen overflow-x-hidden">
+    <!-- Plain black background (no gradients) -->
+
+    <div class="relative z-10 min-h-screen flex items-center justify-center py-10 px-4">
+        <div class="w-full max-w-md" x-data="loginApp()">
+            <!-- Card -->
+            <div class="card rounded-2xl p-6 shadow-xl">
+                <div x-show="!showQR" x-transition>
+                    <!-- Phone input with country dropdown -->
+                    <div class="space-y-2">
+                        <label class="text-sm text-muted">Phone number</label>
+                        <div class="flex items-stretch gap-2">
+                            <div class="h-12 px-3 rounded-lg glass flex items-center gap-2 select-none">
+                                <span class="text-xl">🇮🇳</span>
+                                <span class="text-sm text-muted">+91</span>
+                            </div>
+
+                            <!-- Local number -->
+                            <div class="flex-1">
+                                <input 
+                                    type="tel"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    x-model="localNumber"
+                                    @keyup.enter="generateQR"
+                                    placeholder="Your phone number"
+                                    class="w-full h-12 bg-transparent border border-border rounded-lg px-4 focus:ring-2 focus:ring-white/20 focus:border-white/30 outline-none"
+                                />
+                            </div>
+                        </div>
+                        <p class="text-xs text-muted" x-text="'Full number: +91 ' + readableNumber"></p>
+                    </div>
+
+                    <button 
+                        @click="generateQR"
+                        :disabled="loading || !canSubmit"
+                        class="mt-4 w-full h-12 rounded-lg bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 border border-border"
+                    >
+                        <span x-show="!loading"><i class="fas fa-qrcode mr-2"></i>Generate QR code</span>
+                        <span x-show="loading" class="flex items-center"><i class="fas fa-spinner fa-spin mr-2"></i>Generating...</span>
+                    </button>
+                </div>
+
+                <!-- QR step -->
+                <div x-show="showQR" x-transition>
+                    <div class="text-center space-y-4">
+                        <div class="text-sm text-muted">Scan the QR with your WhatsApp</div>
+                        <div class="inline-block p-3 bg-white rounded-xl">
+                            <div x-show="!qrCode" class="h-64 w-64 flex items-center justify-center">
+                                <i class="fas fa-spinner fa-spin text-gray-500 text-3xl"></i>
+                            </div>
+                            <img x-show="qrCode" :src="qrCode" class="h-64 w-64" alt="QR Code" />
+                        </div>
+                        <button @click="resetForm" class="text-sm text-muted hover:text-white transition">
+                            Use different number
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+function loginApp() {
+    return {
+        // country dropdown
+        // India-only input\n        countryOpen: false,\n        countryFilter: '',
+
+        // number and flow
+        localNumber: '',
+        showQR: false,
+        qrCode: null,
+        loading: false,
+        scanning: false,
+        pollInterval: null,
+        
+        get readableNumber() { return this.localNumber.replace(/\D/g, '').replace(/(\d{4})(?!$)/g, '$1 '); },
+        get canSubmit() { return this.localNumber.replace(/\D/g, '').length >= 7; },
+        get fullPhone() { return '+91' + this.localNumber.replace(/\\D/g, ''); },
+        flagEmoji(code) { return '🇮🇳'; },
+        selectCountry() {},
+        
+        async generateQR() {
+            if (!this.canSubmit) return;
+            this.loading = true;
+            try {
+                const response = await fetch('/api/session/qr-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phoneNumber: this.fullPhone })
+                });
+                const data = await response.json();
+                if (data.status === 'success') {
+                    if (data.data.alreadyConnected) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        this.showQR = true;
+                        this.qrCode = data.data.qrCode;
+                        this.startPolling();
+                    }
+                } else {
+                    alert('Failed to generate QR code: ' + (data.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                this.loading = false;
+            }
+        },
+        
+        startPolling() {
+            this.pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch('/api/session/status');
+                    const data = await response.json();
+                    if (data.status === 'success' && data.data.isLoggedIn) {
+                        this.scanning = true;
+                        clearInterval(this.pollInterval);
+                        setTimeout(() => { window.location.href = '/dashboard'; }, 1200);
+                    }
+                } catch (error) { console.error('Polling error:', error); }
+            }, 2000);
+        },
+        
+        resetForm() {
+            this.showQR = false;
+            this.qrCode = null;
+            this.localNumber = '';
+            this.scanning = false;
+            if (this.pollInterval) clearInterval(this.pollInterval);
+        }
+    }
+}
+</script>
+</body>
+</html>
